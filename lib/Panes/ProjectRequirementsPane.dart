@@ -1,24 +1,7 @@
-import 'dart:math' as math;
-
+import 'package:duration_picker/duration_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-
-/*
-Para o cadastro dos requisitos, o aplicativo deve disponibilizar o cadastro da
-descrição de cada requisito, o momento que foi registrado, o nível de importância
-deste requisito para o solicitante, o nível de dificuldade de implementar este requisito,
-o tempo (em horas) estimado para a construção e entrega deste requisito
-
-  * textfield requisito
-    textfield descrição requisito
-    timestamp hora registro
-    pontuação 1-5 prioridade
-    pontuação dificuldade
-    timestamp horas estimado
-    timestamp realizado
-  *
-*/
+import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
 
 class ProjectRequirementsPane extends StatefulWidget {
   const ProjectRequirementsPane({Key? key}) : super(key: key);
@@ -57,11 +40,13 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
   }
 
   Widget _requisiteContainer(RequisitesControllers controller) {
+    controller.registerMoment.text = DateUtil.getActualMomentTimestamp();
+
     return Column(
       children: [
         Container(
           decoration: const BoxDecoration(
-            color: Colors.grey,
+            color: Colors.black26,
             borderRadius: BorderRadius.all(
               Radius.circular(20),
             ),
@@ -72,14 +57,15 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
               _textFieldWidget("Nome:", null, null, controller.name),
               _textFieldWidget("Descrição:", "Descreva o requisito 🙂", 1500,
                   controller.description),
-              _timeFieldWidget("Tempo estimado:", controller.initialTime),
-              _timeFieldWidget("Tempo final:", controller.finalTime),
+              _registerMomentFieldWidget(controller.registerMoment),
+              _durationFieldWidget("Tempo estimado:", controller.initialTime),
+              _durationFieldWidget("Tempo final:", controller.finalTime),
               _ratingFieldWidget(
-                  controller.priority, Icons.star, Colors.amberAccent),
+                  controller.priority, Icons.star, Colors.yellowAccent),
               const Divider(
-                color: Colors.white,
+                color: Colors.purpleAccent,
                 height: 10,
-                thickness: 1,
+                thickness: 2,
                 indent: 15,
                 endIndent: 25,
               ),
@@ -139,14 +125,15 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
       child: TextField(
+        controller: controller,
         maxLength: maxLength,
         keyboardType: TextInputType.multiline,
-        controller: controller,
         decoration: InputDecoration(
           enabledBorder: _underlineCustomBorder(),
           focusedBorder: _underlineCustomBorder(),
           floatingLabelBehavior: FloatingLabelBehavior.always,
           hintText: hint,
+          hintStyle: const TextStyle(fontSize: 12),
           label: Text(
             label,
             style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -158,18 +145,41 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
     );
   }
 
-  _timeFieldWidget(String label, TextEditingController controller) {
+  _registerMomentFieldWidget(TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
       child: TextField(
-        keyboardType: const TextInputType.numberWithOptions(decimal: false),
         controller: controller,
-        inputFormatters: <TextInputFormatter>[TimeTextInputFormatter()],
+        keyboardType: const TextInputType.numberWithOptions(decimal: false),
+        readOnly: true,
+        decoration: const InputDecoration(
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          label: Text(
+            "Momento registrado:",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
+  _durationFieldWidget(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
+      child: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: false),
+        readOnly: true,
         decoration: InputDecoration(
           enabledBorder: _underlineCustomBorder(),
           focusedBorder: _underlineCustomBorder(),
           floatingLabelBehavior: FloatingLabelBehavior.always,
-          hintText: "hh:mm",
+          hintText: "horas:minutos",
+          hintStyle: const TextStyle(fontSize: 12),
           label: Text(
             label,
             style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -177,6 +187,27 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        onTap: () async {
+          Duration? pickedDuration = await showDurationPicker(
+            snapToMins: 5.0,
+            context: context,
+            initialTime: const Duration(
+              hours: 1,
+              minutes: 0,
+            ),
+          );
+          if (pickedDuration != null) {
+            String hours = (pickedDuration.inHours).toString().padLeft(2, '0');
+            String minutes =
+            (pickedDuration.inMinutes % 60).toString().padLeft(2, '0');
+
+            String time = "$hours:$minutes";
+
+            setState(() {
+              controller.text = time;
+            });
+          }
+        },
       ),
     );
   }
@@ -208,77 +239,15 @@ class _ProjectRequirementsPaneState extends State<ProjectRequirementsPane> {
 
   _underlineCustomBorder() {
     return const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.white),
+      borderSide: BorderSide(color: Colors.purpleAccent, width: 2),
     );
-  }
-}
-
-class TimeTextInputFormatter extends TextInputFormatter {
-  var _exp;
-
-  TimeTextInputFormatter() {
-    _exp = RegExp(r'^[0-9:]+$');
-  }
-
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
-    if (!_exp.hasMatch(newValue.text)) return oldValue;
-
-    TextSelection newSelection = newValue.selection;
-    print(newValue.text);
-    String toRender;
-    String newText = newValue.text;
-
-    toRender = '';
-    if (newText.length < 5) {
-      if (newText == '00:0') {
-        toRender = '';
-      } else {
-        toRender = pack(complete(unpack(newText)));
-      }
-    } else if (newText.length == 6) {
-      toRender = pack(limit(unpack(newText)));
-    }
-
-    newSelection = newValue.selection.copyWith(
-      baseOffset: math.min(toRender.length, toRender.length),
-      extentOffset: math.min(toRender.length, toRender.length),
-    );
-
-    return TextEditingValue(
-      text: toRender,
-      selection: newSelection,
-      composing: TextRange.empty,
-    );
-  }
-
-  String pack(String value) {
-    if (value.length != 4) return value;
-    return '${value.substring(0, 2)}:${value.substring(2, 4)}';
-  }
-
-  String unpack(String value) {
-    return value.replaceAll(':', '');
-  }
-
-  String complete(String value) {
-    if (value.length >= 4) return value;
-    final multiplier = 4 - value.length;
-    return ('0' * multiplier) + value;
-  }
-
-  String limit(String value) {
-    if (value.length <= 4) return value;
-    return value.substring(value.length - 4, value.length);
   }
 }
 
 class RequisitesControllers {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _description = TextEditingController();
+  TextEditingController _registerMoment = TextEditingController();
   final TextEditingController _initialTime = TextEditingController();
   final TextEditingController _finalTime = TextEditingController();
   double priority = 3;
@@ -288,7 +257,13 @@ class RequisitesControllers {
 
   TextEditingController get initialTime => _initialTime;
 
+  TextEditingController get registerMoment => _registerMoment;
+
   TextEditingController get description => _description;
 
   TextEditingController get name => _name;
+
+  set registerMoment(TextEditingController value) {
+    _registerMoment = value;
+  }
 }

@@ -1,7 +1,7 @@
 import 'dart:core';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
 
 import 'ProjectRequirementsPane.dart';
 
@@ -23,8 +23,7 @@ class _ProjectInfo extends State<ProjectInfoPane> {
 
   @override
   void initState() {
-    String formattedDate =
-        DateFormat('dd-MMM-yyyy', "pt_br").format(DateTime.now());
+    String formattedDate = DateUtil.formatDateToDDMMMYYYY(DateTime.now());
     _initialDatePickerController.text = formattedDate;
     _estimatedDatePickerController.text = formattedDate;
     super.initState();
@@ -35,7 +34,6 @@ class _ProjectInfo extends State<ProjectInfoPane> {
     return Scaffold(
       body: SingleChildScrollView(
         child: SizedBox(
-          height: MediaQuery.of(context).size.height,
           child: Form(
             key: _formKey,
             child: Column(
@@ -55,7 +53,6 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                 Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(25),
-                  height: 350,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -70,10 +67,16 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                               }
                               return null;
                             },
-                            keyboardType: TextInputType.multiline,
                             controller: _projectNameController,
+                            keyboardType: TextInputType.multiline,
                             decoration: InputDecoration(
                               contentPadding: const EdgeInsets.all(15),
+                              focusedErrorBorder: _createBorder(Colors.red),
+                              errorBorder: _createBorder(Colors.red),
+                              focusedBorder: _createBorder(Colors.purpleAccent),
+                              enabledBorder: _createBorder(Colors.purpleAccent),
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
                               label: const Text(
                                 "Nome do projeto:",
                                 style: TextStyle(
@@ -81,18 +84,12 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                                 softWrap: true,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              focusedErrorBorder: createBorder(Colors.red),
-                              errorBorder: createBorder(Colors.red),
-                              focusedBorder: createBorder(Colors.purpleAccent),
-                              enabledBorder: createBorder(Colors.purpleAccent),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.always,
                             ),
                           ),
                         ),
-                        createDataWidget(
+                        _createDateWidget(
                             "Data inicial", _initialDatePickerController),
-                        createDataWidget(
+                        _createDateWidget(
                             "Data final", _estimatedDatePickerController),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -103,14 +100,15 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                               backgroundColor: Colors.purpleAccent,
                             ),
                             onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                if (isEstimatedHigher(
-                                    _initialDatePickerController.text,
-                                    _estimatedDatePickerController.text)) {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ProjectRequirementsPane()));
-                                }
+                              if (_formKey.currentState!.validate() &&
+                                  DateUtil.higherDate(
+                                          _initialDatePickerController.text,
+                                          _estimatedDatePickerController
+                                              .text) ==
+                                      "2") {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ProjectRequirementsPane()));
                               }
                             },
                             child: const Text(
@@ -130,13 +128,29 @@ class _ProjectInfo extends State<ProjectInfoPane> {
     );
   }
 
-  createDataWidget(String label, TextEditingController controller) {
+  _createDateWidget(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-      child: TextField(
+      child: TextFormField(
+        validator: (value) {
+          if (value == null ||
+              value.isEmpty ||
+              DateUtil.higherDate(_initialDatePickerController.text,
+                      _estimatedDatePickerController.text) ==
+                  "1") {
+            return 'A data inicial deve ser menor que a final!';
+          }
+          return null;
+        },
         controller: controller,
         style: const TextStyle(fontSize: 20),
+        readOnly: true,
         decoration: InputDecoration(
+          enabledBorder: _createBorder(Colors.purpleAccent),
+          focusedBorder: _createBorder(Colors.purpleAccent),
+          errorBorder: _createBorder(Colors.red),
+          focusedErrorBorder: _createBorder(Colors.red),
+          floatingLabelBehavior: FloatingLabelBehavior.always,
           icon: const Icon(Icons.calendar_month_outlined, color: Colors.white),
           label: Text(
             label,
@@ -144,24 +158,17 @@ class _ProjectInfo extends State<ProjectInfoPane> {
             softWrap: true,
             overflow: TextOverflow.ellipsis,
           ),
-          focusedBorder: createBorder(Colors.purpleAccent),
-          enabledBorder: createBorder(Colors.purpleAccent),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
         ),
-        readOnly: true,
         onTap: () async {
           DateTime? pickedDate = await showDatePicker(
               context: context,
-              locale: const Locale("pt", "BR"),
               initialDate: DateTime.now(),
               firstDate: DateTime(2000),
               lastDate: DateTime(2100));
           if (pickedDate != null) {
-            String formattedDate =
-                DateFormat('dd-MMM-yyyy', "pt").format(pickedDate);
             setState(
               () {
-                controller.text = formattedDate;
+                controller.text = DateUtil.formatDateToDDMMMYYYY(pickedDate);
               },
             );
           }
@@ -170,7 +177,7 @@ class _ProjectInfo extends State<ProjectInfoPane> {
     );
   }
 
-  createBorder(Color color) {
+  _createBorder(Color color) {
     return OutlineInputBorder(
       borderRadius: const BorderRadius.all(
         Radius.elliptical(10.0, 10.0),
@@ -178,22 +185,4 @@ class _ProjectInfo extends State<ProjectInfoPane> {
       borderSide: BorderSide(color: color, width: 2),
     );
   }
-}
-
-bool isEstimatedHigher(String initial, String estimated) {
-  DateTime dt1 = DateTime.parse(convertDate(initial));
-  DateTime dt2 = DateTime.parse(convertDate(estimated));
-
-  if (dt2.compareTo(dt1) > 0) {
-    return true;
-  }
-  return false;
-}
-
-convertDate(String date) {
-  var inputFormat = DateFormat('dd-MMM-yyyy', 'pt');
-  var inputDate = inputFormat.parse(date);
-
-  var outputFormat = DateFormat('yyyy-MM-dd', 'pt');
-  return outputFormat.format(inputDate);
 }
