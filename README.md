@@ -1,16 +1,8 @@
 # it_requires_app
 
-A new Flutter project.
+Flutter project made to Projeto Integrador - Aplicações Móveis classes.
 
-## Getting Started
+It is a simple requirement based app, like a mobile Scrum application would be.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+In it, you can set a project name, a start and final date. Such as its requirements.
+The requirements can be filled with name, description, expected time to conclusion and the did time.
