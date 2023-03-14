@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'HomePane.dart';
+import 'Panes/HomePanes/HomePane.dart';
 
 void main() {
   runApp(const MyApp());

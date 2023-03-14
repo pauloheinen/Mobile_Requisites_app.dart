@@ -3,21 +3,22 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
 
-import 'ProjectRequirementsPane.dart';
+import '../../Models/Project.dart';
+import '../RequirementsPanes/CreateRequirementsPane.dart';
 
-class ProjectInfoPane extends StatefulWidget {
-  const ProjectInfoPane({Key? key}) : super(key: key);
+class CreateProjectPane extends StatefulWidget {
+  const CreateProjectPane({Key? key}) : super(key: key);
 
   @override
-  State<ProjectInfoPane> createState() => _ProjectInfo();
+  State<CreateProjectPane> createState() => _CreateProject();
 }
 
-class _ProjectInfo extends State<ProjectInfoPane> {
+class _CreateProject extends State<CreateProjectPane> {
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _initialDatePickerController =
-      TextEditingController();
+  TextEditingController();
   final TextEditingController _estimatedDatePickerController =
-      TextEditingController();
+  TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -41,14 +42,16 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                 const Padding(
                   padding: EdgeInsets.fromLTRB(0, 40, 0, 0),
                   child: Text(
-                    "Requisitos do Projeto",
+                    "Criação de Projeto",
                     style: TextStyle(fontSize: 26),
                   ),
                 ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                  child: Text("Informe os dados do seu projeto :D",
-                      style: TextStyle(fontSize: 15)),
+                  child: Text(
+                    "Informe os dados do seu projeto :D",
+                    style: TextStyle(fontSize: 15),
+                  ),
                 ),
                 Container(
                   alignment: Alignment.center,
@@ -76,9 +79,9 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                               focusedBorder: _createBorder(Colors.purpleAccent),
                               enabledBorder: _createBorder(Colors.purpleAccent),
                               floatingLabelBehavior:
-                                  FloatingLabelBehavior.always,
+                              FloatingLabelBehavior.always,
                               label: const Text(
-                                "Nome do projeto:",
+                                "Nome:",
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 20),
                                 softWrap: true,
@@ -91,31 +94,8 @@ class _ProjectInfo extends State<ProjectInfoPane> {
                             "Data inicial", _initialDatePickerController),
                         _createDateWidget(
                             "Data final", _estimatedDatePickerController),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: const StadiumBorder(),
-                              splashFactory: NoSplash.splashFactory,
-                              backgroundColor: Colors.purpleAccent,
-                            ),
-                            onPressed: () {
-                              if (_formKey.currentState!.validate() &&
-                                  DateUtil.higherDate(
-                                          _initialDatePickerController.text,
-                                          _estimatedDatePickerController
-                                              .text) ==
-                                      "2") {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ProjectRequirementsPane()));
-                              }
-                            },
-                            child: const Text(
-                              'Tela de requisitos ->',
-                            ),
-                          ),
-                        ),
+                        _createConfigureRequirementsButton(
+                            "Configurar requisitos", context),
                       ],
                     ),
                   ),
@@ -136,7 +116,7 @@ class _ProjectInfo extends State<ProjectInfoPane> {
           if (value == null ||
               value.isEmpty ||
               DateUtil.higherDate(_initialDatePickerController.text,
-                      _estimatedDatePickerController.text) ==
+                  _estimatedDatePickerController.text) ==
                   "1") {
             return 'A data inicial deve ser menor que a final!';
           }
@@ -167,12 +147,42 @@ class _ProjectInfo extends State<ProjectInfoPane> {
               lastDate: DateTime(2100));
           if (pickedDate != null) {
             setState(
-              () {
+                  () {
                 controller.text = DateUtil.formatDateToDDMMMYYYY(pickedDate);
               },
             );
           }
         },
+      ),
+    );
+  }
+
+  _createConfigureRequirementsButton(String label, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          shape: const StadiumBorder(),
+          splashFactory: NoSplash.splashFactory,
+          backgroundColor: Colors.purpleAccent,
+        ),
+        onPressed: () async {
+          if (canConfigureRequirements()) {
+            String name = _projectNameController.text;
+            String initialDate = _initialDatePickerController.text;
+            String finalDate = _estimatedDatePickerController.text;
+
+            Project newProject = Project(
+                name: name, initialDate: initialDate, finalDate: finalDate);
+
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) =>
+                    CreateRequirementsPane(project: newProject)));
+          }
+        },
+        child: const Text(
+          'Configurar requisitos',
+        ),
       ),
     );
   }
@@ -184,5 +194,13 @@ class _ProjectInfo extends State<ProjectInfoPane> {
       ),
       borderSide: BorderSide(color: color, width: 2),
     );
+  }
+
+  bool canConfigureRequirements() {
+    String initialDate = _initialDatePickerController.text;
+    String finalDate = _estimatedDatePickerController.text;
+
+    return (_formKey.currentState!.validate() &&
+        DateUtil.higherDate(initialDate, finalDate) == "2");
   }
 }
