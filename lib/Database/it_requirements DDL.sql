@@ -11,8 +11,6 @@ create table usuarios
 	senha TEXT not null
 );
 
-
-
 create table projetos
 (
 	id INTEGER
@@ -22,9 +20,7 @@ create table projetos
 	dt_final NUMBER not null
 );
 
-
-
--- will not be used this time 
+-- will not be used this time
 -- CREATE TABLE `proj_req` (
 --      `id_proj` varchar(20) NOT NULL,
 --      `id_req` int(11) NOT NULL,
@@ -41,6 +37,9 @@ create table requisitos
     duracao_realizada TEXT    not null,
     prioridade        REAL    not null,
     dificuldade       REAL    not null,
+    localizacao       TEXT    not null,
+    requisito_imagem1 TEXT    not null,
+    requisito_imagem2 TEXT    not null,
     ref_projeto       INTEGER not null
         references projetos
 );

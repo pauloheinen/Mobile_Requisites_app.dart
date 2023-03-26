@@ -1,16 +1,18 @@
 import 'package:flutter/cupertino.dart';
 
 class Requisite {
-  final int? id;
-  final String? name;
-  final String? description;
-  final String? dtRegister;
-  final String? estimatedDuration;
-  final String? accomplishedDuration;
+  int? id;
+  String? name;
+  String? description;
+  String? dtRegister;
+  String? estimatedDuration;
+  String? accomplishedDuration;
   double? priority;
   double? dificulty;
-  final int refProject;
-  final RequisiteControllers? controllers;
+  int refProject;
+  String? gpsPosition;
+  String? requisiteImage1;
+  String? requisiteImage2;
 
   Requisite({
     this.id,
@@ -22,7 +24,9 @@ class Requisite {
     required this.priority,
     required this.dificulty,
     required this.refProject,
-    this.controllers,
+    required this.gpsPosition,
+    required this.requisiteImage1,
+    required this.requisiteImage2,
   });
 
   factory Requisite.fromJson(Map<String, dynamic> json) {
@@ -36,6 +40,9 @@ class Requisite {
       priority: json['prioridade'].toDouble(),
       dificulty: json['dificuldade'].toDouble(),
       refProject: json['ref_projeto'],
+      gpsPosition: json['gps_posicao'],
+      requisiteImage1: json['requisito_imagem1'],
+      requisiteImage2: json['requisito_imagem2'],
     );
   }
 
@@ -51,6 +58,9 @@ class Requisite {
     data['prioridade'] = priority;
     data['dificuldade'] = dificulty;
     data['ref_projeto'] = refProject;
+    data['gps_posicao'] = gpsPosition;
+    data['requisito_imagem1'] = requisiteImage1;
+    data['requisito_imagem2'] = requisiteImage2;
 
     return data;
   }
@@ -64,6 +74,9 @@ class RequisiteControllers {
   final TextEditingController _accomplishedTime = TextEditingController();
   final TextEditingController _priority = TextEditingController(text: "1.0");
   final TextEditingController _dificulty = TextEditingController(text: "1.0");
+  final TextEditingController _gpsPosition = TextEditingController();
+  final TextEditingController _requisiteImage1 = TextEditingController();
+  final TextEditingController _requisiteImage2 = TextEditingController();
 
   TextEditingController get accomplishedTime => _accomplishedTime;
 
@@ -82,4 +95,10 @@ class RequisiteControllers {
   set registerMoment(TextEditingController value) {
     _registerMoment = value;
   }
+
+  TextEditingController get gpsPosition => _gpsPosition;
+
+  TextEditingController get requisiteImage1 => _requisiteImage1;
+
+  TextEditingController get requisiteImage2 => _requisiteImage2;
 }

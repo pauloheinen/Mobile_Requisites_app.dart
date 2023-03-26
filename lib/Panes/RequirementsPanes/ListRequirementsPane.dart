@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:it_requires_app/Custom/Border/UnderlineBorder/UnderlineCustomBorder.dart';
+import 'package:it_requires_app/Custom/Divider/DividerCustom.dart';
+import 'package:it_requires_app/Custom/Duration/DurationCustomWidget.dart';
+import 'package:it_requires_app/Custom/GPSPosition/GPSPositionCustomWidget.dart';
+import 'package:it_requires_app/Custom/Image/ImageCustomWidget.dart';
+import 'package:it_requires_app/Custom/Rating/RatingCustomWidget.dart';
+import 'package:it_requires_app/Custom/TextField/TextFieldCustomWidget.dart';
 import 'package:it_requires_app/Models/Project.dart';
 import 'package:it_requires_app/Models/Requisite.dart';
 
 import '../../Repository/RequisiteRepository.dart';
 
 class ListRequirementsPane extends StatefulWidget {
-  const ListRequirementsPane({Key? key, required this.project})
+  const ListRequirementsPane(
+      {Key? key, required this.project, required this.isLocked})
       : super(key: key);
 
   final Project project;
+  final bool isLocked;
 
   @override
   State<ListRequirementsPane> createState() => _ListRequirementsPaneState();
@@ -31,24 +39,24 @@ class _ListRequirementsPaneState extends State<ListRequirementsPane> {
     return _isLoaded == false
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(6, 10, 6, 0),
-          child: Stack(
-            children: [
-              ListView.builder(
-                itemCount: _requisites.length,
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return _requisiteContainer(_requisites[index]);
-                },
+            body: SingleChildScrollView(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(6, 10, 6, 0),
+                child: Stack(
+                  children: [
+                    ListView.builder(
+                      itemCount: _requisites.length,
+                      shrinkWrap: true,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return _requisiteContainer(_requisites[index]);
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
+            ),
+          );
   }
 
   Widget _requisiteContainer(Requisite requisite) {
@@ -66,131 +74,75 @@ class _ListRequirementsPaneState extends State<ListRequirementsPane> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _textFieldWidget(
-                    "Nome:", TextEditingController(text: requisite.name)),
-                _textFieldWidget("Descrição:",
-                    TextEditingController(text: requisite.description)),
-                _registerMomentFieldWidget(
-                    TextEditingController(text: requisite.dtRegister)),
-                _durationFieldWidget("Duração estimada:",
-                    TextEditingController(text: requisite.estimatedDuration)),
-                _durationFieldWidget(
-                    "Duração realizada:",
-                    TextEditingController(
-                        text: requisite.accomplishedDuration)),
-                _ratingFieldWidget(
-                    requisite.priority, Icons.star, Colors.yellowAccent),
-                const Divider(
-                  color: Colors.purpleAccent,
-                  height: 10,
-                  thickness: 2,
-                  indent: 15,
-                  endIndent: 25,
+                TextFieldCustomWidget(
+                  label: "Nome:",
+                  hint: null,
+                  controller: TextEditingController(text: requisite.name),
+                  enabledBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  focusedBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  isLocked: widget.isLocked,
                 ),
-                _ratingFieldWidget(
-                    requisite.dificulty, Icons.warning_amber, Colors.red),
+                TextFieldCustomWidget(
+                  label: "Descrição:",
+                  hint: "Descreva o requisito 🙂",
+                  controller:
+                      TextEditingController(text: requisite.description),
+                  enabledBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  focusedBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  isLocked: widget.isLocked,
+                ),
+                TextFieldCustomWidget(
+                  label: "Momento do registro: ",
+                  controller: TextEditingController(text: requisite.dtRegister),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isLocked: widget.isLocked,
+                ),
+                GPSPositionCustomWidget(
+                  label: "Localização:",
+                  controller:
+                      TextEditingController(text: requisite.gpsPosition),
+                  gpsLocality: requisite.gpsPosition!,
+                ),
+                DurationCustomWidget(
+                  label: "Duração estimada:",
+                  controller:
+                      TextEditingController(text: requisite.estimatedDuration),
+                  isLocked: widget.isLocked,
+                ),
+                DurationCustomWidget(
+                  label: "Duração realizada:",
+                  controller: TextEditingController(
+                      text: requisite.accomplishedDuration),
+                  isLocked: widget.isLocked,
+                ),
+                RatingCustomWidget(
+                  icon: Icons.star,
+                  color: Colors.yellowAccent,
+                  controller: TextEditingController(
+                      text: requisite.priority.toString()),
+                  isLocked: widget.isLocked,
+                ),
+                DividerCustom.buildCustomDivider(),
+                RatingCustomWidget(
+                  icon: Icons.warning_amber,
+                  color: Colors.red,
+                  controller: TextEditingController(
+                      text: requisite.dificulty.toString()),
+                  isLocked: widget.isLocked,
+                ),
+                ImageCustomWidget(
+                  imageController1:
+                      TextEditingController(text: requisite.requisiteImage1),
+                  imageController2:
+                      TextEditingController(text: requisite.requisiteImage2),
+                  isLocked: widget.isLocked,
+                ),
               ],
             ),
           ),
         ),
       ],
-    );
-  }
-
-  _textFieldWidget(String label, TextEditingController? controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(
-          enabledBorder: _underlineCustomBorder(),
-          focusedBorder: _underlineCustomBorder(),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          label: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  _registerMomentFieldWidget(TextEditingController? controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-        readOnly: true,
-        decoration: const InputDecoration(
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          label: Text(
-            "Momento registrado:",
-            style: TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  _durationFieldWidget(String label, TextEditingController? controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-        readOnly: true,
-        decoration: InputDecoration(
-          enabledBorder: _underlineCustomBorder(),
-          focusedBorder: _underlineCustomBorder(),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          label: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  _ratingFieldWidget(double? controller, IconData icon, Color color) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(5, 2, 0, 0),
-        child: RatingBar.builder(
-          ignoreGestures: true,
-          glow: true,
-          glowColor: Colors.pinkAccent,
-          glowRadius: 3,
-          unratedColor: Colors.white,
-          initialRating: controller!,
-          direction: Axis.horizontal,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemPadding: const EdgeInsets.symmetric(horizontal: 10),
-          itemBuilder: (context, _) => Icon(
-            icon,
-            color: color,
-          ),
-          onRatingUpdate: (rating) {},
-        ),
-      ),
-    );
-  }
-
-  _underlineCustomBorder() {
-    return const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.purpleAccent, width: 2),
     );
   }
 

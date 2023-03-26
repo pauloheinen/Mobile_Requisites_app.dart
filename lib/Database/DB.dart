@@ -45,7 +45,6 @@ class DB {
       Database? db = await instance.getDatabase;
       id = await db?.insert(table, row);
       db?.batch().commit();
-
     } on Exception catch (e) {
       if (kDebugMode) {
         print(e);
@@ -53,6 +52,18 @@ class DB {
     }
 
     return id;
+  }
+
+  update(String table, Map<String, dynamic> row) async {
+    try {
+      Database? db = await instance.getDatabase;
+      db?.update(table, row);
+      db?.batch().commit();
+    } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
   }
 
   getData(String table) async {

@@ -1,6 +1,13 @@
-import 'package:duration_picker/duration_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:it_requires_app/Custom/Border/UnderlineBorder/UnderlineCustomBorder.dart';
+import 'package:it_requires_app/Custom/Divider/DividerCustom.dart';
+import 'package:it_requires_app/Custom/Duration/DurationCustomWidget.dart';
+import 'package:it_requires_app/Custom/GPSPosition/GPSPositionCustomWidget.dart';
+import 'package:it_requires_app/Custom/Image/ImageCustomWidget.dart';
+import 'package:it_requires_app/Custom/Rating/RatingCustomWidget.dart';
+import 'package:it_requires_app/Custom/TextField/TextFieldCustomWidget.dart';
 import 'package:it_requires_app/Models/Requisite.dart';
 import 'package:it_requires_app/Panes/MenuPane/MenuPane.dart';
 import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
@@ -23,8 +30,13 @@ class CreateRequirementsPane extends StatefulWidget {
 class _CreateRequirements extends State<CreateRequirementsPane> {
   final List<RequisiteControllers> _requisitesControllers = [];
 
+  late LocationPermission _permission;
+
+  String _gpsLocality = "Sem localização";
+
   @override
   void initState() {
+    _getActualLocation();
     _requisitesControllers.add(RequisiteControllers());
     super.initState();
   }
@@ -58,7 +70,7 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
                   splashColor: Colors.greenAccent,
                   splashRadius: 28,
                   onPressed: () {
-                    _showDialog();
+                    _concludeDialog();
                   },
                 ),
               ),
@@ -76,7 +88,6 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
 
     return Column(
       children: [
-
         Container(
           decoration: const BoxDecoration(
             color: Colors.black26,
@@ -87,24 +98,61 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _textFieldWidget("Nome:", null, null, controller.name),
-              _textFieldWidget("Descrição:", "Descreva o requisito 🙂", 1500,
-                  controller.description),
-              _registerMomentFieldWidget(controller.registerMoment),
-              _durationFieldWidget(
-                  "Duração estimada:", controller.estimatedTime),
-              _durationFieldWidget(
-                  "Duração realizada:", controller.accomplishedTime),
-              _ratingFieldWidget(
-                  controller.priority, Icons.star, Colors.yellowAccent),
-              const Divider(
-                color: Colors.purpleAccent,
-                height: 10,
-                thickness: 2,
-                indent: 15,
-                endIndent: 25,
+              TextFieldCustomWidget(
+                  label: "Nome:",
+                  hint: null,
+                  controller: controller.name,
+                  enabledBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  focusedBorder: UnderlineCustomBorder.buildCustomBorder(),
+                  isLocked: false),
+              TextFieldCustomWidget(
+                label: "Descrição:",
+                hint: "Descreva o requisito 🙂",
+                controller: controller.description,
+                enabledBorder: UnderlineCustomBorder.buildCustomBorder(),
+                focusedBorder: UnderlineCustomBorder.buildCustomBorder(),
+                isLocked: false,
               ),
-              _ratingFieldWidget(controller.dificulty, Icons.warning_amber, Colors.red),
+              TextFieldCustomWidget(
+                label: "Momento do registro: ",
+                controller: controller.registerMoment,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isLocked: true,
+              ),
+              GPSPositionCustomWidget(
+                label: "Localização:",
+                controller: controller.gpsPosition,
+                gpsLocality: _gpsLocality,
+              ),
+              DurationCustomWidget(
+                label: "Duração estimada:",
+                controller: controller.estimatedTime,
+                isLocked: false,
+              ),
+              DurationCustomWidget(
+                label: "Duração realizada:",
+                controller: controller.accomplishedTime,
+                isLocked: false,
+              ),
+              RatingCustomWidget(
+                icon: Icons.star,
+                color: Colors.yellowAccent,
+                controller: controller.priority,
+                isLocked: false,
+              ),
+              DividerCustom.buildCustomDivider(),
+              RatingCustomWidget(
+                icon: Icons.warning_amber,
+                color: Colors.red,
+                controller: controller.dificulty,
+                isLocked: false,
+              ),
+              ImageCustomWidget(
+                imageController1: controller.requisiteImage1,
+                imageController2: controller.requisiteImage2,
+                isLocked: false,
+              ),
             ],
           ),
         ),
@@ -126,7 +174,7 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
                   if (_requisitesControllers.length == 1) {
                     return;
                   }
-                  setState(() => _removeRequisite(controller));
+                  setState(() => _removeRequirement(controller));
                 },
               ),
             ),
@@ -141,7 +189,7 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
                   "Adicionar",
                 ),
                 onPressed: () {
-                  setState(() => _addRequisites(RequisiteControllers()));
+                  setState(() => _addRequirement(RequisiteControllers()));
                 },
               ),
             ),
@@ -152,135 +200,7 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
     );
   }
 
-  _textFieldWidget(String label, String? hint, int? maxLength,
-      TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        maxLength: maxLength,
-        keyboardType: TextInputType.multiline,
-        decoration: InputDecoration(
-          enabledBorder: _underlineCustomBorder(),
-          focusedBorder: _underlineCustomBorder(),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          hintText: hint,
-          hintStyle: const TextStyle(fontSize: 12),
-          label: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  _registerMomentFieldWidget(TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-        readOnly: true,
-        decoration: const InputDecoration(
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          label: Text(
-            "Momento registrado:",
-            style: TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-
-  _durationFieldWidget(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 25, 0),
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: false),
-        readOnly: true,
-        decoration: InputDecoration(
-          enabledBorder: _underlineCustomBorder(),
-          focusedBorder: _underlineCustomBorder(),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          hintText: "horas:minutos",
-          hintStyle: const TextStyle(fontSize: 12),
-          label: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        onTap: () async {
-          Duration? pickedDuration = await showDurationPicker(
-            decoration: const BoxDecoration(color: Colors.transparent,),
-            snapToMins: 5.0,
-            context: context,
-            initialTime: const Duration(
-              hours: 1,
-              minutes: 0,
-            ),
-          );
-          if (pickedDuration != null) {
-            String hours = (pickedDuration.inHours).toString().padLeft(2, '0');
-            String minutes =
-            (pickedDuration.inMinutes % 60).toString().padLeft(2, '0');
-
-            String time = "$hours:$minutes";
-
-            setState(() {
-              controller.text = time;
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  _ratingFieldWidget(TextEditingController controller, IconData icon, Color color) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(5, 2, 0, 0),
-        child: RatingBar.builder(
-          glow: true,
-          glowColor: Colors.pinkAccent,
-          glowRadius: 3,
-          unratedColor: Colors.white,
-          initialRating: double.parse(controller.text),
-          direction: Axis.horizontal,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemPadding: const EdgeInsets.symmetric(horizontal: 10),
-          itemBuilder: (context, _) => Icon(
-            icon,
-            color: color,
-          ),
-          onRatingUpdate: (rating) {
-            setState(() {
-              controller.text = rating.toString();
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  _underlineCustomBorder() {
-    return const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.purpleAccent, width: 2),
-    );
-  }
-
-  _showDialog() async {
+  _concludeDialog() async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -359,9 +279,9 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
                                       context,
                                       MaterialPageRoute<dynamic>(
                                         builder: (BuildContext context) =>
-                                        const MenuPane(),
+                                            const MenuPane(),
                                       ),
-                                          (route) => false,
+                                      (route) => false,
                                     );
                                   },
                                 ),
@@ -392,7 +312,8 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
     }
 
     for (var element in _requisitesControllers) {
-      requisites.add(Requisite(
+      requisites.add(
+        Requisite(
           name: element.name.text,
           description: element.description.text,
           dtRegister: element.registerMoment.text,
@@ -400,8 +321,12 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
           accomplishedDuration: element.accomplishedTime.text,
           priority: double.parse(element.priority.text),
           dificulty: double.parse(element.dificulty.text),
-          refProject: id));
-
+          refProject: id,
+          gpsPosition: element.gpsPosition.text,
+          requisiteImage1: element.requisiteImage1.text,
+          requisiteImage2: element.requisiteImage2.text,
+        ),
+      );
     }
 
     for (var element in requisites) {
@@ -409,11 +334,39 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
     }
   }
 
-  _addRequisites(RequisiteControllers controller) {
+  _getActualLocation() async {
+    _permission = await Geolocator.requestPermission();
+
+    if (_permission.name == "denied") {
+      ToastUtil.warning("O acesso à localização deve ser habilitado!");
+      // if the requested permission is denied
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+
+    try {
+      List<Placemark> locality =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      String street = locality[0].street!;
+      String countryCode = locality[0].isoCountryCode!;
+      String postalCode = locality[0].postalCode!;
+
+      setState(() {
+        _gpsLocality = "$street, $countryCode, $postalCode";
+      });
+    } on Exception catch (ignored) {
+      // we should probably ignore it since it is a network problem that may occur in emulators...
+      // in this case, _GPSLocality will receive "Sem localização"
+    }
+  }
+
+  _addRequirement(RequisiteControllers controller) {
     _requisitesControllers.add(controller);
   }
 
-  _removeRequisite(RequisiteControllers controller) {
+  _removeRequirement(RequisiteControllers controller) {
     _requisitesControllers.remove(controller);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:it_requires_app/Models/Project.dart';
+import 'package:it_requires_app/Panes/RequirementsPanes/EditRequirementsPane.dart';
 import 'package:it_requires_app/Panes/RequirementsPanes/ListRequirementsPane.dart';
 import 'package:it_requires_app/Repository/ProjectRepository.dart';
 import 'package:it_requires_app/Utils/Toast/ToastUtil.dart';
@@ -26,47 +27,47 @@ class _ListProjectPaneState extends State<ListProjectPane> {
 
   @override
   Widget build(BuildContext context) {
-
     return _isLoaded == false
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-      body: SingleChildScrollView(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: _projectsAndRequisitesCount.isEmpty ? Container() : GridView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            itemCount: _projectsAndRequisitesCount.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              mainAxisExtent: 200,
-              crossAxisCount: 1,
-              mainAxisSpacing: 25,
+            body: SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: _projectsAndRequisitesCount.isEmpty
+                    ? Container()
+                    : GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(20),
+                        itemCount: _projectsAndRequisitesCount.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          mainAxisExtent: 200,
+                          crossAxisCount: 1,
+                          mainAxisSpacing: 25,
+                        ),
+                        itemBuilder: (context, index) {
+                          final project =
+                              _projectsAndRequisitesCount.keys.toList()[index];
+                          return _createListTile(project);
+                        },
+                      ),
+              ),
             ),
-            itemBuilder: (context, index) {
-              final project =
-              _projectsAndRequisitesCount.keys.toList()[index];
-              return _createListTile(project);
-            },
-          ),
-        ),
-      ),
-    );
+          );
   }
 
   void _loadProjects() async {
     _projectsAndRequisitesCount
         .addAll(await ProjectRepository.getProjectsAndRequisitesCount());
 
-    if ( _projectsAndRequisitesCount.isEmpty )
-    {
+    if (_projectsAndRequisitesCount.isEmpty) {
       ToastUtil.inform("Ainda não possui projetos listados");
       Navigator.pushAndRemoveUntil<dynamic>(
         context,
         MaterialPageRoute<dynamic>(
-          builder: (BuildContext context) =>
-          const MenuPane(),
+          builder: (BuildContext context) => const MenuPane(),
         ),
-            (route) => false,
+        (route) => false,
       );
     }
     setState(() {
@@ -98,8 +99,8 @@ class _ListProjectPaneState extends State<ListProjectPane> {
       ),
       subtitle: Text(
         "Data inicial: ${project.initialDate}\n"
-            "Data final: ${project.finalDate}\n\n"
-            "Requisitos: $count",
+        "Data final: ${project.finalDate}\n\n"
+        "Requisitos: $count",
         style: const TextStyle(fontSize: 14),
       ),
       trailing: PopupMenuButton<int>(
@@ -113,41 +114,50 @@ class _ListProjectPaneState extends State<ListProjectPane> {
             if (value == 1) {
               _visualizeRequisite(project);
             } else if (value == 2) {
-              // _editRequisite();
+              _editRequisite(project);
             } else if (value == 3) {
               // _excludeRequisite();
             }
           },
           itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
-              value: 1,
-              child: Text(
-                "Visualizar",
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-            const PopupMenuDivider(),
-            const PopupMenuItem(
-              value: 2,
-              child: Text(
-                "Editar[not implemented]",
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-            const PopupMenuDivider(),
-            const PopupMenuItem(
-              value: 3,
-              child: Text(
-                "Deletar[not implemented]",
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-          ]),
+                const PopupMenuItem(
+                  value: 1,
+                  child: Text(
+                    "Visualizar",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 2,
+                  child: Text(
+                    "Editar",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 3,
+                  child: Text(
+                    "Deletar[not implemented]",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ]),
     );
   }
 
   void _visualizeRequisite(Project project) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => ListRequirementsPane(project: project)));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => ListRequirementsPane(
+              project: project,
+              isLocked: true,
+            )));
+  }
+
+  void _editRequisite(project) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) =>
+            EditRequirementsPane(project: project, isLocked: false)));
   }
 }
