@@ -1,7 +1,13 @@
 import 'dart:core';
 
 import 'package:flutter/material.dart';
+import 'package:it_requires_app/Custom/Button/ElevatedButtonCustomWidget.dart';
+import 'package:it_requires_app/Custom/DatePicker/DatePickerCustomWidget.dart';
+import 'package:it_requires_app/Custom/TextField/TextFieldWithValidationCustomWidget.dart';
 import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
+import 'package:it_requires_app/Utils/Launcher/LauncherUtil.dart';
+import 'package:it_requires_app/Utils/Navigator/NavigatorUtil.dart';
+import 'package:it_requires_app/Utils/Toast/ToastUtil.dart';
 
 import '../../Models/Project.dart';
 import '../RequirementsPanes/CreateRequirementsPane.dart';
@@ -15,10 +21,11 @@ class CreateProjectPane extends StatefulWidget {
 
 class _CreateProject extends State<CreateProjectPane> {
   final TextEditingController _projectNameController = TextEditingController();
+  final TextEditingController _documentLinkController = TextEditingController();
   final TextEditingController _initialDatePickerController =
-  TextEditingController();
-  final TextEditingController _estimatedDatePickerController =
-  TextEditingController();
+      TextEditingController();
+  final TextEditingController _finalDatePickerController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -26,7 +33,7 @@ class _CreateProject extends State<CreateProjectPane> {
   void initState() {
     String formattedDate = DateUtil.formatDateToDDMMMYYYY(DateTime.now());
     _initialDatePickerController.text = formattedDate;
-    _estimatedDatePickerController.text = formattedDate;
+    _finalDatePickerController.text = formattedDate;
     super.initState();
   }
 
@@ -60,42 +67,56 @@ class _CreateProject extends State<CreateProjectPane> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: TextFormField(
-                            validator: (value) {
-                              if (value == null ||
-                                  value.isEmpty ||
-                                  _projectNameController.text.isEmpty) {
-                                return 'O campo deve ser preenchido!';
-                              }
-                              return null;
-                            },
-                            controller: _projectNameController,
-                            keyboardType: TextInputType.multiline,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.all(15),
-                              focusedErrorBorder: _createBorder(Colors.red),
-                              errorBorder: _createBorder(Colors.red),
-                              focusedBorder: _createBorder(Colors.purpleAccent),
-                              enabledBorder: _createBorder(Colors.purpleAccent),
-                              floatingLabelBehavior:
-                              FloatingLabelBehavior.always,
-                              label: const Text(
-                                "Nome:",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 20),
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
+                        TextFieldWithValidationCustomWidget(
+                          label: "Nome:",
+                          controller: _projectNameController,
+                          shouldValidate: true,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 8,
+                              child: TextFieldWithValidationCustomWidget(
+                                label: "Link para documentação:",
+                                controller: _documentLinkController,
+                                shouldValidate: false,
                               ),
                             ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                                child: IconButton(
+                                  enableFeedback: false,
+                                  iconSize: 30,
+                                  color: Colors.white,
+                                  icon: const Icon(Icons.link),
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onPressed: () {
+                                    _openInWebView(
+                                        _documentLinkController.text);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        DatePickerCustomWidget(
+                          label: "Data inicial",
+                          controller: _initialDatePickerController,
+                        ),
+                        DatePickerCustomWidget(
+                          label: "Data final",
+                          controller: _finalDatePickerController,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                          child: ElevatedButtonCustomWidget(
+                            label: "Configurar requisitos",
+                            labelSize: 16,
+                            configureRequirements,
                           ),
                         ),
-                        _createDateWidget(
-                            "Data inicial", _initialDatePickerController),
-                        _createDateWidget(
-                            "Data final", _estimatedDatePickerController),
-                        _createConfigureRequirementsButton(
-                            "Configurar requisitos", context),
                       ],
                     ),
                   ),
@@ -108,99 +129,47 @@ class _CreateProject extends State<CreateProjectPane> {
     );
   }
 
-  _createDateWidget(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-      child: TextFormField(
-        validator: (value) {
-          if (value == null ||
-              value.isEmpty ||
-              DateUtil.higherDate(_initialDatePickerController.text,
-                  _estimatedDatePickerController.text) ==
-                  "1") {
-            return 'A data inicial deve ser menor que a final!';
-          }
-          return null;
-        },
-        controller: controller,
-        style: const TextStyle(fontSize: 20),
-        readOnly: true,
-        decoration: InputDecoration(
-          enabledBorder: _createBorder(Colors.purpleAccent),
-          focusedBorder: _createBorder(Colors.purpleAccent),
-          errorBorder: _createBorder(Colors.red),
-          focusedErrorBorder: _createBorder(Colors.red),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          icon: const Icon(Icons.calendar_month_outlined, color: Colors.white),
-          label: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 20),
-            softWrap: true,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100));
-          if (pickedDate != null) {
-            setState(
-                  () {
-                controller.text = DateUtil.formatDateToDDMMMYYYY(pickedDate);
-              },
-            );
-          }
-        },
-      ),
-    );
-  }
+  configureRequirements() {
+    if (!_canConfigureRequirements()) {
+      return;
+    }
 
-  _createConfigureRequirementsButton(String label, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          shape: const StadiumBorder(),
-          splashFactory: NoSplash.splashFactory,
-          backgroundColor: Colors.purpleAccent,
-        ),
-        onPressed: () async {
-          if (canConfigureRequirements()) {
-            String name = _projectNameController.text;
-            String initialDate = _initialDatePickerController.text;
-            String finalDate = _estimatedDatePickerController.text;
-
-            Project newProject = Project(
-                name: name, initialDate: initialDate, finalDate: finalDate);
-
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) =>
-                    CreateRequirementsPane(project: newProject)));
-          }
-        },
-        child: const Text(
-          'Configurar requisitos',
-        ),
-      ),
-    );
-  }
-
-  _createBorder(Color color) {
-    return OutlineInputBorder(
-      borderRadius: const BorderRadius.all(
-        Radius.elliptical(10.0, 10.0),
-      ),
-      borderSide: BorderSide(color: color, width: 2),
-    );
-  }
-
-  bool canConfigureRequirements() {
+    String name = _projectNameController.text;
     String initialDate = _initialDatePickerController.text;
-    String finalDate = _estimatedDatePickerController.text;
+    String finalDate = _finalDatePickerController.text;
+    String documentLink = _documentLinkController.text;
+
+    Project newProject = Project(
+      name: name,
+      initialDate: initialDate,
+      finalDate: finalDate,
+      documentLink: documentLink,
+    );
+
+    NavigatorUtil.pushTo(context, CreateRequirementsPane(project: newProject));
+  }
+
+  bool _canConfigureRequirements() {
+    String initialDate = _initialDatePickerController.text;
+    String finalDate = _finalDatePickerController.text;
+
+    if (DateUtil.higherDate(initialDate, finalDate) == "1") {
+      ToastUtil.warning("A data final deve ser maior que a inicial!");
+      return false;
+    }
 
     return (_formKey.currentState!.validate() &&
         DateUtil.higherDate(initialDate, finalDate) == "2");
+  }
+
+  _openInWebView(String url) async {
+    if (url.isEmpty) {
+      ToastUtil.warning("Não há link para seguir");
+      return;
+    }
+
+    if (!await LauncherUtil.launch(url)) {
+      ToastUtil.warning("Não foi possível abrir o link!");
+    }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:it_requires_app/Custom/Border/UnderlineBorder/UnderlineCustomBorder.dart';
+import 'package:it_requires_app/Custom/Button/ElevatedButtonCustomWidget.dart';
 import 'package:it_requires_app/Custom/Divider/DividerCustom.dart';
 import 'package:it_requires_app/Custom/Duration/DurationCustomWidget.dart';
 import 'package:it_requires_app/Custom/GPSPosition/GPSPositionCustomWidget.dart';
@@ -11,6 +12,7 @@ import 'package:it_requires_app/Custom/TextField/TextFieldCustomWidget.dart';
 import 'package:it_requires_app/Models/Requisite.dart';
 import 'package:it_requires_app/Panes/MenuPane/MenuPane.dart';
 import 'package:it_requires_app/Utils/Dates/DateUtil.dart';
+import 'package:it_requires_app/Utils/Navigator/NavigatorUtil.dart';
 import 'package:it_requires_app/Utils/Toast/ToastUtil.dart';
 
 import '../../Models/Project.dart';
@@ -157,43 +159,25 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
           ),
         ),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const Spacer(),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  splashFactory: NoSplash.splashFactory,
-                  backgroundColor: Colors.purpleAccent,
-                ),
-                child: const Text(
-                  "Remover",
-                ),
-                onPressed: () {
-                  if (_requisitesControllers.length == 1) {
-                    return;
-                  }
-                  setState(() => _removeRequirement(controller));
-                },
-              ),
+            ElevatedButtonCustomWidget(
+              label: "Remover",
+              labelSize: 16,
+              () {
+                if (_requisitesControllers.length == 1) {
+                  return;
+                }
+                setState(() => _removeRequirement(controller));
+              },
             ),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  splashFactory: NoSplash.splashFactory,
-                  backgroundColor: Colors.purpleAccent,
-                ),
-                child: const Text(
-                  "Adicionar",
-                ),
-                onPressed: () {
-                  setState(() => _addRequirement(RequisiteControllers()));
-                },
-              ),
+            ElevatedButtonCustomWidget(
+              label: "Adicionar",
+              labelSize: 16,
+              () {
+                setState(() => _addRequirement(RequisiteControllers()));
+              },
             ),
-            const Spacer(),
           ],
         ),
       ],
@@ -235,59 +219,21 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
                   height: 80,
                   child: Center(
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Expanded(
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const StadiumBorder(),
-                                    splashFactory: NoSplash.splashFactory,
-                                    backgroundColor: Colors.purpleAccent,
-                                  ),
-                                  child: const Text(
-                                    "Não",
-                                  ),
-                                  onPressed: () async {
-                                    setState(() {});
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
+                        ElevatedButtonCustomWidget(
+                          label: "Não",
+                          () {
+                            setState(() {});
+                            Navigator.of(context).pop();
+                          },
                         ),
-                        Expanded(
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const StadiumBorder(),
-                                    splashFactory: NoSplash.splashFactory,
-                                    backgroundColor: Colors.purpleAccent,
-                                  ),
-                                  child: const Text(
-                                    "Sim",
-                                  ),
-                                  onPressed: () async {
-                                    await _concludeRequisites();
-                                    Navigator.pushAndRemoveUntil<dynamic>(
-                                      context,
-                                      MaterialPageRoute<dynamic>(
-                                        builder: (BuildContext context) =>
-                                            const MenuPane(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
+                        ElevatedButtonCustomWidget(
+                          label: "Sim",
+                          () {
+                            _concludeRequisites();
+                            _backToMenuPane();
+                          },
                         ),
                       ],
                     ),
@@ -356,7 +302,7 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
       setState(() {
         _gpsLocality = "$street, $countryCode, $postalCode";
       });
-    } on Exception catch (ignored) {
+    } on Exception {
       // we should probably ignore it since it is a network problem that may occur in emulators...
       // in this case, _GPSLocality will receive "Sem localização"
     }
@@ -368,5 +314,9 @@ class _CreateRequirements extends State<CreateRequirementsPane> {
 
   _removeRequirement(RequisiteControllers controller) {
     _requisitesControllers.remove(controller);
+  }
+
+  void _backToMenuPane() {
+    NavigatorUtil.pushTo(context, const MenuPane());
   }
 }

@@ -3,7 +3,7 @@ class User {
   final String? name;
   final String? password;
 
-  const User({required this.id, required this.name, required this.password});
+  const User({this.id, required this.name, required this.password});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(

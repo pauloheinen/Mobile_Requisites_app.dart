@@ -60,7 +60,7 @@ class _ImageState extends State<ImageCustomWidget> {
         ? IconButton(
             splashColor: widget.isLocked ? Colors.transparent : null,
             highlightColor: widget.isLocked ? Colors.transparent : null,
-      enableFeedback: false,
+            enableFeedback: false,
             iconSize: 65,
             icon: const Icon(Icons.photo_filter),
             onPressed: () {
@@ -69,20 +69,46 @@ class _ImageState extends State<ImageCustomWidget> {
               }
             },
           )
-        : IconButton(
-            splashColor: widget.isLocked ? Colors.transparent : null,
-            highlightColor: widget.isLocked ? Colors.transparent : null,
-            enableFeedback: false,
-            icon: Ink.image(
-                height: 250,
-                width: 250,
-                image: ImageUtil.provideImageFromPath(controller.text)),
-            onPressed: () {
-              if (!widget.isLocked) {
-                _changePhotoDialog(controller);
-              }
-            },
-          );
+        : buildImageIconButton(controller);
+  }
+
+  buildImageIconButton(TextEditingController controller) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        IconButton(
+          splashColor: widget.isLocked ? Colors.transparent : null,
+          highlightColor: widget.isLocked ? Colors.transparent : null,
+          enableFeedback: false,
+          icon: Ink.image(
+              height: 250,
+              width: 250,
+              image: ImageUtil.provideImageFromPath(controller.text)),
+          onPressed: () {
+            if (!widget.isLocked) {
+              _changePhotoDialog(controller);
+            }
+          },
+        ),
+        Visibility(
+          visible: !widget.isLocked,
+          child: Positioned(
+            right: MediaQuery.of(context).devicePixelRatio /
+                MediaQuery.of(context).size.width,
+            child: IconButton(
+              enableFeedback: false,
+              iconSize: 30,
+              color: Colors.red,
+              icon: const Icon(Icons.highlight_remove_outlined),
+              splashColor: Colors.transparent,
+              onPressed: () {
+                removeImage(controller);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   _changePhotoDialog(TextEditingController controller) async {
@@ -192,5 +218,11 @@ class _ImageState extends State<ImageCustomWidget> {
         );
       },
     );
+  }
+
+  removeImage(TextEditingController controller) {
+    setState(() {
+      controller.text = "";
+    });
   }
 }

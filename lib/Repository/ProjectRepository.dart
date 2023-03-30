@@ -10,7 +10,8 @@ class ProjectRepository {
                                     primary key autoincrement,
                                   nome TEXT not null,
                                   dt_inicial NUMBER not null,
-                                  dt_final NUMBER not null
+                                  dt_final NUMBER not null,
+                                  link_documento TEXT
                                 );''';
 
   static Future<int?> addProject(Project project) async {
@@ -28,9 +29,12 @@ class ProjectRepository {
 
     json = await db.getData(table);
 
-    return List.generate(json.length, (i) {
-      return Project.fromJson(json[i]);
-    });
+    return List.generate(
+      json.length,
+      (i) {
+        return Project.fromJson(json[i]);
+      },
+    );
   }
 
   static Future<Map<Project, int>> getProjectsAndRequisitesCount() async {
@@ -53,13 +57,18 @@ class ProjectRepository {
     List<Project> projects = List.empty(growable: true);
     List<int> requisitesCount = List.empty(growable: true);
 
-    for( int i = 0; i < json.length; i++ ) {
-      projects.add(Project(
-                id: json[i]['id'],
-                name: json[i]['nome'],
-                initialDate: json[i]['dt_inicial'],
-                finalDate: json[i]['dt_final']));
-            requisitesCount.add(json[i]['contagem_requisitos']);
+    for (int i = 0; i < json.length; i++) {
+      projects.add(
+        Project(
+          id: json[i]['id'],
+          name: json[i]['nome'],
+          initialDate: json[i]['dt_inicial'],
+          finalDate: json[i]['dt_final'],
+          documentLink: json[i]['link_documento'],
+        ),
+      );
+
+      requisitesCount.add(json[i]['contagem_requisitos']);
     }
 
     return Map.fromIterables(projects, requisitesCount);

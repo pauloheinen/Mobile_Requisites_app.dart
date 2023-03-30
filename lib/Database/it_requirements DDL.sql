@@ -17,7 +17,8 @@ create table projetos
 		primary key autoincrement,
 	nome TEXT not null,
 	dt_inicial NUMBER not null,
-	dt_final NUMBER not null
+	dt_final NUMBER not null,
+	link_documento TEXT
 );
 
 -- will not be used this time

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:it_requires_app/Custom/Border/UnderlineBorder/UnderlineCustomBorder.dart';
+import 'package:it_requires_app/Custom/Button/ElevatedButtonCustomWidget.dart';
 import 'package:it_requires_app/Custom/Divider/DividerCustom.dart';
 import 'package:it_requires_app/Custom/Duration/DurationCustomWidget.dart';
 import 'package:it_requires_app/Custom/GPSPosition/GPSPositionCustomWidget.dart';
@@ -10,6 +11,7 @@ import 'package:it_requires_app/Models/Project.dart';
 import 'package:it_requires_app/Models/Requisite.dart';
 import 'package:it_requires_app/Panes/ProjectPanes/ListProjectPane.dart';
 import 'package:it_requires_app/Repository/RequisiteRepository.dart';
+import 'package:it_requires_app/Utils/Navigator/NavigatorUtil.dart';
 
 class EditRequirementsPane extends StatefulWidget {
   const EditRequirementsPane(
@@ -198,25 +200,11 @@ class _EditRequirementsPaneState extends State<EditRequirementsPane> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const StadiumBorder(),
-                                    splashFactory: NoSplash.splashFactory,
-                                    backgroundColor: Colors.purpleAccent,
-                                  ),
-                                  child: const Text(
-                                    "Não",
-                                  ),
-                                  onPressed: () async {
+                                ElevatedButtonCustomWidget(
+                                  label: "Não",
+                                  () {
                                     setState(() {});
-                                    Navigator.pushAndRemoveUntil<dynamic>(
-                                      context,
-                                      MaterialPageRoute<dynamic>(
-                                        builder: (BuildContext context) =>
-                                            const ListProjectPane(),
-                                      ),
-                                      (route) => false,
-                                    );
+                                    pop();
                                   },
                                 ),
                               ],
@@ -228,25 +216,11 @@ class _EditRequirementsPaneState extends State<EditRequirementsPane> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const StadiumBorder(),
-                                    splashFactory: NoSplash.splashFactory,
-                                    backgroundColor: Colors.purpleAccent,
-                                  ),
-                                  child: const Text(
-                                    "Sim",
-                                  ),
-                                  onPressed: () async {
-                                    await _concludeRequisites();
-                                    Navigator.pushAndRemoveUntil<dynamic>(
-                                      context,
-                                      MaterialPageRoute<dynamic>(
-                                        builder: (BuildContext context) =>
-                                            const ListProjectPane(),
-                                      ),
-                                      (route) => false,
-                                    );
+                                ElevatedButtonCustomWidget(
+                                  label: "Sim",
+                                  () {
+                                    _concludeRequisites();
+                                    NavigatorUtil.pushTo(context, const ListProjectPane());
                                   },
                                 ),
                               ],
@@ -290,27 +264,29 @@ class _EditRequirementsPaneState extends State<EditRequirementsPane> {
     }
   }
 
+  pop() {
+    Navigator.of(context).pop();
+  }
+
   void _loadRequisites() async {
     _requisites
         .addAll(await RequisiteRepository.getRequisites(widget.project.id!));
 
-    _requisites.forEach(
-      (element) {
-        RequisiteControllers controller = RequisiteControllers();
-        controller.name.text = element.name!;
-        controller.description.text = element.description!;
-        controller.registerMoment.text = element.dtRegister!;
-        controller.gpsPosition.text = element.gpsPosition!;
-        controller.estimatedTime.text = element.estimatedDuration!;
-        controller.accomplishedTime.text = element.accomplishedDuration!;
-        controller.priority.text = element.priority.toString();
-        controller.dificulty.text = element.dificulty.toString();
-        controller.requisiteImage1.text = element.requisiteImage1!;
-        controller.requisiteImage2.text = element.requisiteImage2!;
+    for (var element in _requisites) {
+      RequisiteControllers controller = RequisiteControllers();
+      controller.name.text = element.name!;
+      controller.description.text = element.description!;
+      controller.registerMoment.text = element.dtRegister!;
+      controller.gpsPosition.text = element.gpsPosition!;
+      controller.estimatedTime.text = element.estimatedDuration!;
+      controller.accomplishedTime.text = element.accomplishedDuration!;
+      controller.priority.text = element.priority.toString();
+      controller.dificulty.text = element.dificulty.toString();
+      controller.requisiteImage1.text = element.requisiteImage1!;
+      controller.requisiteImage2.text = element.requisiteImage2!;
 
-        _requisitesControllers.add(controller);
-      },
-    );
+      _requisitesControllers.add(controller);
+    }
 
     setState(() {
       _isLoaded = true;

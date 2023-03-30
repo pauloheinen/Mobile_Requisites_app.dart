@@ -14,13 +14,46 @@ class UserRepository {
                                    senha TEXT not null
                                  );''';
 
-  addUser(User user) async {
-    var db = await DB.instance.getDatabase;
+  static Future<bool> addUser(User user) async {
+    int? addedId;
 
-    await db?.insert(table, user.toJson());
+    DB db = DB.instance;
+    addedId = await db.insert(table, user.toJson());
+
+    return addedId == null;
   }
 
-  Future<User?> getUser(User user) async {
-    return null;
+  static Future<User?> getUser(User user) async {
+    DB db = DB.instance;
+
+    String sql = '''
+                 select * from
+                 usuarios
+                 where
+                 usuarios.nome == '${user.name}'
+                 and
+                 usuarios.senha == '${user.password}';
+                 ''';
+
+    List<dynamic> json = await db.execute(sql);
+
+    if (json.isEmpty) {
+      return null;
+    }
+
+    return User(
+        id: json[0]['id'], name: json[0]['nome'], password: json[0]['senha']);
+  }
+
+  static Future<bool> usernameExist(String username) async {
+    DB db = DB.instance;
+
+    String sql = '''
+                 Select * from usuarios where nome = '$username';
+                 ''';
+
+    List<dynamic> json = await db.execute(sql);
+
+    return json.isEmpty;
   }
 }

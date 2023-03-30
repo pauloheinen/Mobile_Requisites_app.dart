@@ -1,16 +1,16 @@
-
-
 class Project {
   final int? id;
   final String? name;
   final String? initialDate;
   final String? finalDate;
+  final String? documentLink;
 
   const Project({
     this.id,
     required this.name,
     required this.initialDate,
     required this.finalDate,
+    this.documentLink,
   });
 
   factory Project.fromJson(Map<String, dynamic> json) {
@@ -19,6 +19,7 @@ class Project {
       name: json['nome'],
       initialDate: json['dt_inicial'],
       finalDate: json['dt_final'],
+      documentLink: json['link_documento'],
     );
   }
 
@@ -29,6 +30,7 @@ class Project {
     data['nome'] = name;
     data['dt_inicial'] = initialDate;
     data['dt_final'] = finalDate;
+    data['link_documento'] = documentLink;
 
     return data;
   }

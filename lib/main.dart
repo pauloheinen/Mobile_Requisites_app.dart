@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'Panes/HomePanes/HomePane.dart';
+import 'package:it_requires_app/Panes/HomePanes/LoginPane.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         brightness: Brightness.dark,
       ),
-      home: const HomePane(),
+      home: const LoginPane(),
     );
   }
 }

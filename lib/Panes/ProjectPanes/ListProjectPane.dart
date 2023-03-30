@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:it_requires_app/Models/Project.dart';
 import 'package:it_requires_app/Panes/RequirementsPanes/EditRequirementsPane.dart';
 import 'package:it_requires_app/Panes/RequirementsPanes/ListRequirementsPane.dart';
 import 'package:it_requires_app/Repository/ProjectRepository.dart';
+import 'package:it_requires_app/Utils/Launcher/LauncherUtil.dart';
+import 'package:it_requires_app/Utils/Navigator/NavigatorUtil.dart';
 import 'package:it_requires_app/Utils/Toast/ToastUtil.dart';
 
 import '../MenuPane/MenuPane.dart';
@@ -62,14 +65,9 @@ class _ListProjectPaneState extends State<ListProjectPane> {
 
     if (_projectsAndRequisitesCount.isEmpty) {
       ToastUtil.inform("Ainda não possui projetos listados");
-      Navigator.pushAndRemoveUntil<dynamic>(
-        context,
-        MaterialPageRoute<dynamic>(
-          builder: (BuildContext context) => const MenuPane(),
-        ),
-        (route) => false,
-      );
+      NavigatorUtil.pushAndRemoveTo(context, const MenuPane());
     }
+
     setState(() {
       _isLoaded = true;
     });
@@ -97,67 +95,73 @@ class _ListProjectPaneState extends State<ListProjectPane> {
         softWrap: true,
         overflow: TextOverflow.visible,
       ),
-      subtitle: Text(
-        "Data inicial: ${project.initialDate}\n"
-        "Data final: ${project.finalDate}\n\n"
-        "Requisitos: $count",
+      subtitle: Linkify(
+        onOpen: (link) => LauncherUtil.launch(link.text),
+        text: _generateProjectInfo(project, count),
         style: const TextStyle(fontSize: 14),
       ),
       trailing: PopupMenuButton<int>(
-          shape: const RoundedRectangleBorder(
-            side: BorderSide(color: Colors.blueGrey),
-            borderRadius: BorderRadius.all(
-              Radius.circular(15),
+        shape: const RoundedRectangleBorder(
+          side: BorderSide(color: Colors.blueGrey),
+          borderRadius: BorderRadius.all(
+            Radius.circular(15),
+          ),
+        ),
+        onSelected: (value) {
+          if (value == 1) {
+            _visualizeRequisite(project);
+          } else if (value == 2) {
+            _editRequisite(project);
+          }
+        },
+        itemBuilder: (BuildContext context) => [
+          const PopupMenuItem(
+            value: 1,
+            child: Text(
+              "Visualizar",
+              style: TextStyle(fontSize: 12),
             ),
           ),
-          onSelected: (value) {
-            if (value == 1) {
-              _visualizeRequisite(project);
-            } else if (value == 2) {
-              _editRequisite(project);
-            } else if (value == 3) {
-              // _excludeRequisite();
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-                const PopupMenuItem(
-                  value: 1,
-                  child: Text(
-                    "Visualizar",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 2,
-                  child: Text(
-                    "Editar",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 3,
-                  child: Text(
-                    "Deletar[not implemented]",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-              ]),
+          const PopupMenuDivider(),
+          const PopupMenuItem(
+            value: 2,
+            child: Text(
+              "Editar",
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   void _visualizeRequisite(Project project) {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => ListRequirementsPane(
-              project: project,
-              isLocked: true,
-            )));
+    NavigatorUtil.pushTo(
+      context,
+      ListRequirementsPane(
+        project: project,
+        isLocked: true,
+      ),
+    );
   }
 
   void _editRequisite(project) {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) =>
-            EditRequirementsPane(project: project, isLocked: false)));
+    NavigatorUtil.pushTo(
+      context,
+      EditRequirementsPane(project: project, isLocked: false),
+    );
+  }
+
+  String _generateProjectInfo(Project project, int count) {
+    String? initialDate = project.initialDate;
+    String? finalDate = project.finalDate;
+    String? link = project.documentLink;
+
+    String text = "";
+    text += "Data inicial: $initialDate\n"
+        "Data final: $finalDate\n";
+    text += link == null ? "\n" : "$link\n\n";
+    text += "Requisitos: $count";
+    return text;
   }
 }

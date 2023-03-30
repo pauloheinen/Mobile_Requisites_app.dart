@@ -8,14 +8,15 @@ class TextFieldCustomWidget extends StatefulWidget {
   final InputBorder focusedBorder;
   final bool isLocked;
 
-  const TextFieldCustomWidget(
-      {super.key,
-      required this.label,
-      this.hint,
-      required this.controller,
-      required this.enabledBorder,
-      required this.focusedBorder,
-      required this.isLocked});
+  const TextFieldCustomWidget({
+    super.key,
+    required this.label,
+    this.hint,
+    required this.controller,
+    required this.enabledBorder,
+    required this.focusedBorder,
+    required this.isLocked,
+  });
 
   @override
   _TextFieldState createState() => _TextFieldState();
@@ -29,6 +30,7 @@ class _TextFieldState extends State<TextFieldCustomWidget> {
       child: TextField(
         controller: widget.controller,
         readOnly: widget.isLocked,
+        keyboardType: TextInputType.multiline,
         decoration: InputDecoration(
           enabledBorder: widget.enabledBorder,
           focusedBorder: widget.focusedBorder,
